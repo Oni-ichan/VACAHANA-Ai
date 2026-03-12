@@ -279,17 +279,36 @@ function handleMessage(message) {
     case MultimodalLiveResponseType.TOOL_CALL:
       console.log("🛠️ Tool call received: ", message.data);
       const functionCalls = message.data.functionCalls;
+      const functionResponses = [];
       for (let index = 0; index < functionCalls.length; index++) {
         const functionCall = functionCalls[index];
         const functionName = functionCall.name;
+        const functionCallId = functionCall.id;
         const parameters = functionCall.args;
         console.log(
           `Calling function ${functionName} with parameters: ${JSON.stringify(
             parameters
           )}`
         );
-        state.client.callFunction(functionName, parameters);
+        let result;
+        try {
+          result = state.client.callFunction(functionName, parameters);
+          functionResponses.push({
+            id: functionCallId,
+            name: functionName,
+            response: { result: result ?? "ok" },
+          });
+        } catch (err) {
+          console.error(`Error calling function ${functionName}:`, err);
+          functionResponses.push({
+            id: functionCallId,
+            name: functionName,
+            response: { error: err.message },
+          });
+        }
       }
+      // Send all function responses back to the API
+      state.client.sendToolResponse(functionResponses);
       break;
 
     case MultimodalLiveResponseType.TURN_COMPLETE:

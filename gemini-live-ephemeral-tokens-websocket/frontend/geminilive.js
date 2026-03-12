@@ -128,7 +128,7 @@ class FunctionCallDefinition {
         parameters
       )}`
     );
-    this.functionToCall(parameters);
+    return this.functionToCall(parameters);
   }
 }
 
@@ -246,7 +246,7 @@ class GeminiLiveAPI {
 
   callFunction(functionName, parameters) {
     const functionToCall = this.functionsMap[functionName];
-    functionToCall.runFunction(parameters);
+    return functionToCall.runFunction(parameters);
   }
 
   connect() {
@@ -345,7 +345,7 @@ class GeminiLiveAPI {
           },
         },
         systemInstruction: { parts: [{ text: this.systemInstructions }] },
-        tools: { functionDeclarations: tools },
+        tools: [{ functionDeclarations: tools }],
         // proactivity: this.proactivity,
 
         // realtimeInputConfig: {
@@ -370,12 +370,11 @@ class GeminiLiveAPI {
     }
 
     if (this.googleGrounding) {
-      sessionSetupMessage.setup.tools.googleSearch = {};
       // Currently can't have both Google Search with custom tools.
       console.log(
         "Google Grounding enabled, removing custom function calls if any."
       );
-      delete sessionSetupMessage.setup.tools.functionDeclarations;
+      sessionSetupMessage.setup.tools = [{ googleSearch: {} }];
     }
 
     // Add affective dialog if enabled
@@ -399,11 +398,10 @@ class GeminiLiveAPI {
     this.sendMessage(message);
   }
 
-  sendToolResponse(toolCallId, response) {
+  sendToolResponse(functionResponses) {
     const message = {
       toolResponse: {
-        id: toolCallId,
-        response: response,
+        functionResponses: functionResponses,
       },
     };
     console.log("🔧 Sending tool response:", message);
