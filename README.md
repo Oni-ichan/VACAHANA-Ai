@@ -1,81 +1,84 @@
-# Gemini Live API Examples
+# Vachana AI: Zero-Minute Emergency Responder 🚑🚓🚒
 
-The Live API enables low-latency, real-time voice and video interactions with
-Gemini. It processes continuous streams of audio, video, or text to deliver
-immediate, human-like spoken responses, creating a natural conversational
-experience for your users.
+**Vachana AI** is a state-of-the-art emergency triage system powered by the Gemini 2.0 Live API. It provides an instantaneous, voice-first interface for citizens in distress while giving emergency dispatchers a powerful "Command Center" for live monitoring and tactical intervention.
 
-![Live API Overview](https://ai.google.dev/gemini-api/docs/images/live-api-overview.png)
+![Vachana AI Banner](https://img.shields.io/badge/Vachana-AI-blueviolet?style=for-the-badge&logo=google-gemini)
 
-[Try the Live API in Google AI Studio](https://aistudio.google.com/live)
+## 🌟 Key Features
 
-## Example use cases
+### 🎙️ Voice-First Triage
+- **Ultra-Low Latency**: Real-time voice interaction using Gemini Live API.
+- **Multilingual Support**: Automatically detects and responds in multiple languages to assist a diverse population.
+- **Pure Voice Interface**: A clean, distraction-free UI designed for high-stress situations.
 
-Live API can be used to build real-time voice and video agents for a
-variety of industries, including:
+### 🎮 Admin Command Center (`/admin`)
+- **Live Scripting**: Real-time transcript of the citizen's conversation with the AI.
+- **Tactical GPS Map**: Visual plotting of the citizen's location as soon as they share it.
+- **Take Control (Override)**: Allows a human operator to instantly silence the AI and take over the voice channel.
+- **Direct Speak**: Operators can speak directly to the citizen through their own microphone.
+- **Mock Dispatch**: One-click buttons to dispatch Ambulance, Police, or Fire units.
 
-*   **E-commerce and retail:** Shopping assistants that offer personalized
-    recommendations and support agents that resolve customer issues.
-*   **Gaming:** Interactive non-player characters (NPCs), in-game help
-    assistants, and real-time translation of in-game content.
-*   **Next-gen interfaces:** Voice- and video-enabled experiences in robotics,
-    smart glasses, and vehicles.
-*   **Healthcare:** Health companions for patient support and education.
-*   **Financial services:** AI advisors for wealth management and investment
-    guidance.
-*   **Education:** AI mentors and learner companions that provide personalized
-    instruction and feedback.
+### 💎 Premium Aesthetic
+- **Glassmorphism Design**: Modern, high-contrast dark mode dashboard.
+- **Interactive Visuals**: Live status indicators and smooth CSS animations.
 
-## Key features
+---
 
-Live API offers a comprehensive set of features for building
-robust voice and video agents:
+## 🚀 Quick Start
 
-*   [**Multilingual support**](https://ai.google.dev/gemini-api/docs/live-guide#supported-languages):
-    Converse in 70 supported languages.
-*   [**Barge-in**](https://ai.google.dev/gemini-api/docs/live-guide#interruptions):
-    Users can interrupt the model at any time for responsive interactions.
-*   [**Tool use**](https://ai.google.dev/gemini-api/docs/live-tools):
-    Integrates tools like function calling and Google Search for dynamic
-    interactions.
-*   [**Audio transcriptions**](https://ai.google.dev/gemini-api/docs/live-guide#audio-transcription):
-    Provides text transcripts of both user input and model output.
-*   [**Proactive audio**](https://ai.google.dev/gemini-api/docs/live-guide#proactive-audio):
-    Lets you control when the model responds and in what contexts.
-*   [**Affective dialog**](https://ai.google.dev/gemini-api/docs/live-guide#affective-dialog):
-    Adapts response style and tone to match the user's input expression.
+### Prerequisites
+- Python 3.10+
+- [Google AI Studio API Key](https://aistudio.google.com/app/apikey)
 
-## Technical specifications
+### Local Setup
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Oni-ichan/VACAHANA-Ai.git
+   cd VACAHANA-Ai/Vachanagent
+   ```
 
-The following table outlines the technical specifications for the
-Live API:
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-| Category          | Details                                                                                     |
-| :---------------- | :------------------------------------------------------------------------------------------ |
-| Input modalities  | Audio (raw 16-bit PCM audio, 16kHz, little-endian), images/video (JPEG <= 1FPS), text       |
-| Output modalities | Audio (raw 16-bit PCM audio, 24kHz, little-endian), text                                    |
-| Protocol          | Stateful WebSocket connection (WSS)                                                         |
+3. **Configure Environment**:
+   Create a `.env` file in the `Vachanagent` folder:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   MODEL=gemini-2.0-flash-exp
+   ```
 
-## Examples
+4. **Run the application**:
+   ```bash
+   python main.py
+   ```
 
-*   **[Gen AI SDK Python example](./gemini-live-genai-python-sdk/README.md)**: Recommended for ease of use. Connect to the Gemini Live API using the Gen AI SDK to build a real-time multimodal application with a Python backend.
-*   **[Epheremal tokens and raw WebSocket example](./gemini-live-ephemeral-tokens-websocket/README.md)**: RAW protocol control. Connect to the Gemini Live API using WebSockets to build a real-time multimodal application with a JavaScript frontend and a Python backend.
-*   **[Command-line Python example](./command-line/python/README.md)**: A minimal command-line app that streams microphone audio to the Gemini Live API and plays back the response in real time using Python.
-*   **[Command-line Node.js example](./command-line/node/README.md)**: A minimal command-line app that streams microphone audio to the Gemini Live API and plays back the response in real time using Node.js.
+5. **Access the Dashboards**:
+   - **Citizen**: `http://localhost:8000`
+   - **Admin**: `http://localhost:8000/admin`
 
-> [!TIP]
-> Install the [Gemini Live API Dev](https://github.com/google-gemini/gemini-skills?tab=readme-ov-file#gemini-live-api-dev) skill for AI-assisted development with the Live API in your coding agents.
+---
 
-## Partner integrations
+## ☁️ Deployment (Render)
 
-To streamline the development of real-time audio and video apps, you can use
-a third-party integration that supports the Gemini Live
-API over WebRTC or WebSockets.
+This project is optimized for deployment on **Render** using the provided `render.yaml` and `Dockerfile`.
 
-*   [LiveKit](https://docs.livekit.io/agents/models/realtime/plugins/gemini/): Use the Gemini Live API with LiveKit Agents.
-*   [Pipecat by Daily](https://docs.pipecat.ai/guides/features/gemini-live): Create a real-time AI chatbot using Gemini Live and Pipecat.
-*   [Fishjam by Software Mansion](https://docs.fishjam.io/tutorials/gemini-live-integration): Create live video and audio streaming applications with Fishjam.
-*   [Vision Agents by Stream](https://visionagents.ai/integrations/gemini): Build real-time voice and video AI applications with Vision Agents.
-*   [Voximplant](https://voximplant.com/products/gemini-client): Connect inbound and outbound calls to Live API with Voximplant.
-*   [Agent Development Kit (ADK)](https://google.github.io/adk-docs/streaming/): Create an agent and use the Agent Development Kit (ADK) Streaming to enable voice and video communication.
-*   [Firebase AI SDK](https://firebase.google.com/docs/ai-logic/live-api?api=dev): Get started with the Gemini Live API using Firebase AI Logic.
+1. Connect your GitHub repository to Render.
+2. Create a **New Web Service**.
+3. Set your `GEMINI_API_KEY` in the environment variables.
+4. Render will automatically build the container and deploy.
+
+---
+
+## 🛠️ Tech Stack
+- **Backend**: FastAPI (Python)
+- **Real-time**: WebSockets & Gemini Live API
+- **Frontend**: Vanilla JS, CSS3 (Glassmorphism), Leaflet.js (Maps)
+- **Deployment**: Docker
+
+## 📜 License
+Apache-2.0 License
+
+---
+*Built with ❤️ for the Zero-Minute Responder Hackathon.*
