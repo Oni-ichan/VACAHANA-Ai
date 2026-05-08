@@ -1,84 +1,88 @@
-# Vachana AI: Zero-Minute Emergency Responder 🚑🚓🚒
+# Gemini Live API - Python SDK & Vanilla JS
 
-**Vachana AI** is a state-of-the-art emergency triage system powered by the Gemini 2.0 Live API. It provides an instantaneous, voice-first interface for citizens in distress while giving emergency dispatchers a powerful "Command Center" for live monitoring and tactical intervention.
+A demonstration of the Gemini Live API using the [Google Gen AI Python SDK](https://github.com/googleapis/python-genai) for the backend and vanilla JavaScript for the frontend. This example shows how to build a real-time multimodal application with a robust Python backend handling the API connection.
 
-![Vachana AI Banner](https://img.shields.io/badge/Vachana-AI-blueviolet?style=for-the-badge&logo=google-gemini)
+## Quick Start
 
-## 🌟 Key Features
+### 1. Backend Setup
 
-### 🎙️ Voice-First Triage
-- **Ultra-Low Latency**: Real-time voice interaction using Gemini Live API.
-- **Multilingual Support**: Automatically detects and responds in multiple languages to assist a diverse population.
-- **Pure Voice Interface**: A clean, distraction-free UI designed for high-stress situations.
+Install dependencies and start the FastAPI server using `uv`:
 
-### 🎮 Admin Command Center (`/admin`)
-- **Live Scripting**: Real-time transcript of the citizen's conversation with the AI.
-- **Tactical GPS Map**: Visual plotting of the citizen's location as soon as they share it.
-- **Take Control (Override)**: Allows a human operator to instantly silence the AI and take over the voice channel.
-- **Direct Speak**: Operators can speak directly to the citizen through their own microphone.
-- **Mock Dispatch**: One-click buttons to dispatch Ambulance, Police, or Fire units.
+```bash
+# Create a virtual environment and install dependencies
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
 
-### 💎 Premium Aesthetic
-- **Glassmorphism Design**: Modern, high-contrast dark mode dashboard.
-- **Interactive Visuals**: Live status indicators and smooth CSS animations.
+# Start the server
+uv run main.py
+```
 
----
+### 2. Frontend
 
-## 🚀 Quick Start
+Open your browser and navigate to:
 
-### Prerequisites
-- Python 3.10+
-- [Google AI Studio API Key](https://aistudio.google.com/app/apikey)
+[http://localhost:8000](http://localhost:8000)
 
-### Local Setup
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Oni-ichan/VACAHANA-Ai.git
-   cd VACAHANA-Ai/Vachanagent
-   ```
+## Features
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Google Gen AI SDK**: Uses the official Python SDK (`google-genai`) for simplified API interaction.
+- **FastAPI Backend**: Robust, async-ready web server handling WebSocket connections.
+- **Real-time Streaming**: Bi-directional audio and video streaming.
+- **Tool Use**: Demonstrates how to register and handle server-side tools.
+- **Vanilla JS Frontend**: Lightweight frontend with no build steps or framework dependencies.
 
-3. **Configure Environment**:
-   Create a `.env` file in the `Vachanagent` folder:
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   MODEL=gemini-2.0-flash-exp
-   ```
+## Project Structure
 
-4. **Run the application**:
-   ```bash
-   python main.py
-   ```
+```
+/
+├── main.py             # FastAPI server & WebSocket endpoint
+├── gemini_live.py      # Gemini Live API wrapper using Gen AI SDK
+├── requirements.txt    # Python dependencies
+└── frontend/
+    ├── index.html      # User Interface
+    ├── main.js         # Application logic
+    ├── gemini-client.js # WebSocket client for backend communication
+    ├── media-handler.js # Audio/Video capture and playback
+    └── pcm-processor.js # AudioWorklet for PCM processing
+```
 
-5. **Access the Dashboards**:
-   - **Citizen**: `http://localhost:8000`
-   - **Admin**: `http://localhost:8000/admin`
+## Configuration
 
----
+You can configure the application by setting environment variables or by using a `.env` file.
 
-## ☁️ Deployment (Render)
+**Important:** You must set the `GEMINI_API_KEY` to your Google AI Studio API key.
 
-This project is optimized for deployment on **Render** using the provided `render.yaml` and `Dockerfile`.
+1.  Create a `.env` file in the root directory.
+2.  Add your API key:
 
-1. Connect your GitHub repository to Render.
-2. Create a **New Web Service**.
-3. Set your `GEMINI_API_KEY` in the environment variables.
-4. Render will automatically build the container and deploy.
+```env
+GEMINI_API_KEY=your_api_key_here
+```
 
----
+Alternatively, you can set it in your shell:
 
-## 🛠️ Tech Stack
-- **Backend**: FastAPI (Python)
-- **Real-time**: WebSockets & Gemini Live API
-- **Frontend**: Vanilla JS, CSS3 (Glassmorphism), Leaflet.js (Maps)
-- **Deployment**: Docker
+```bash
+export GEMINI_API_KEY=your_api_key_here
+```
 
-## 📜 License
-Apache-2.0 License
+## Core Components
 
----
-*Built with ❤️ for the Zero-Minute Responder Hackathon.*
+### Backend (`gemini_live.py`)
+
+The `GeminiLive` class wraps the `genai.Client` to manage the session:
+
+```python
+# Connects using the SDK
+async with self.client.aio.live.connect(model=self.model, config=config) as session:
+    # Manages input/output queues
+    await asyncio.gather(
+        send_audio(),
+        send_video(),
+        receive_responses()
+    )
+```
+
+### Frontend (`gemini-client.js`)
+
+The frontend communicates with the FastAPI backend via WebSockets, sending base64-encoded media chunks and receiving audio responses.
