@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: vachana-ai
+    runtime: docker
+    plan: free # Change to starter if you want to avoid spin-down
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # Set this in the Render dashboard
+      - key: MODEL
+        value: gemini-2.0-flash-exp
+      - key: PORT
+        value: 8080

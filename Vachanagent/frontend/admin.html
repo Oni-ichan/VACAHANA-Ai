@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vachana AI Admin Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="/static/admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <header>
+        <div class="header-left">
+          <h1>Vachana AI Admin</h1>
+          <div class="badge">Command Center</div>
+        </div>
+        <div class="header-right">
+          <div id="status" class="status disconnected">Live Monitoring: Off</div>
+        </div>
+      </header>
+
+      <main class="admin-grid">
+        <section class="transcript-panel">
+          <div class="panel-header">
+            <h2>Live Scripting</h2>
+            <div class="live-indicator">
+              <span class="dot"></span>
+              LIVE
+            </div>
+          </div>
+          <div id="chat-log" class="chat-log">
+            <div class="placeholder-text">Waiting for active citizen session...</div>
+          </div>
+        </section>
+
+        <section class="map-panel">
+          <div class="panel-header">
+            <h2>Live Location Tracking</h2>
+          </div>
+          <div id="map" class="admin-map"></div>
+        </section>
+
+        <aside class="control-panel">
+          <section class="action-section">
+            <h3>Operator Controls</h3>
+            <button id="takeControlBtn" class="btn override-btn">
+              TAKE CONTROL
+            </button>
+            <button id="speakBtn" class="btn speak-btn">
+              SPEAK TO CITIZEN
+            </button>
+            <p class="hint">Overwrites AI response and mutes Gemini.</p>
+          </section>
+
+          <section class="dispatch-section">
+            <h3>Mock Dispatch</h3>
+            <div class="dispatch-grid">
+              <button class="dispatch-btn ambulance" data-type="Ambulance">
+                <span class="icon">🚑</span>
+                Ambulance
+              </button>
+              <button class="dispatch-btn police" data-type="Police">
+                <span class="icon">🚓</span>
+                Police
+              </button>
+              <button class="dispatch-btn fire" data-type="Fire Brigade">
+                <span class="icon">🚒</span>
+                Fire Brigade
+              </button>
+            </div>
+          </section>
+
+          <section class="system-status">
+            <h3>Active Alerts</h3>
+            <div id="alerts-list" class="alerts-list">
+              <div class="alert-item info">System ready. No active sessions.</div>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="/static/media-handler.js"></script>
+    <script src="/static/admin.js"></script>
+  </body>
+</html>

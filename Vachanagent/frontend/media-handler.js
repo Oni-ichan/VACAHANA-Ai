@@ -19,6 +19,14 @@ class MediaHandler {
     if (!this.audioContext) {
       this.audioContext = new (window.AudioContext ||
         window.webkitAudioContext)();
+      
+      if (!this.audioContext.audioWorklet) {
+        console.error("AudioWorklet is not supported in this browser or context.");
+        throw new Error(
+          "AudioWorklet is not available. This app requires a secure context (localhost or HTTPS) to access audio features."
+        );
+      }
+
       await this.audioContext.audioWorklet.addModule(
         "/static/pcm-processor.js"
       );

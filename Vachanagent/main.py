@@ -33,6 +33,39 @@ TWILIO_APP_HOST = os.getenv("TWILIO_APP_HOST")
 # Initialize FastAPI
 app = FastAPI()
 
+# Global state for Admin monitoring
+admin_websockets = set()
+citizen_websockets = set()
+
+
+async def broadcast_to_admins(message: dict):
+    if not admin_websockets:
+        return
+    dead_ws = set()
+    msg_json = json.dumps(message)
+    for ws in admin_websockets:
+        try:
+            await ws.send_text(msg_json)
+        except:
+            dead_ws.add(ws)
+    for ws in dead_ws:
+        admin_websockets.remove(ws)
+
+
+async def broadcast_to_citizens(message: dict):
+    if not citizen_websockets:
+        return
+    dead_ws = set()
+    msg_json = json.dumps(message)
+    for ws in citizen_websockets:
+        try:
+            await ws.send_text(msg_json)
+        except:
+            dead_ws.add(ws)
+    for ws in dead_ws:
+        citizen_websockets.remove(ws)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -50,10 +83,57 @@ async def root():
     return FileResponse("frontend/index.html")
 
 
+@app.get("/admin")
+async def admin():
+    return FileResponse("frontend/admin.html")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return Response(status_code=204)
+
+
+@app.websocket("/admin/ws")
+async def admin_websocket(websocket: WebSocket):
+    await websocket.accept()
+    admin_websockets.add(websocket)
+    logger.info("Admin WebSocket connected")
+    try:
+        while True:
+            message = await websocket.receive()
+            if message.get("text"):
+                # Handle admin commands (Take Control, Dispatch)
+                payload = json.loads(message["text"])
+                await broadcast_to_admins(payload)
+                await broadcast_to_citizens(payload)
+            elif message.get("bytes"):
+                # Broadcast admin audio to citizens
+                await broadcast_to_citizens_binary(message["bytes"])
+    except WebSocketDisconnect:
+        logger.info("Admin WebSocket disconnected")
+    finally:
+        if websocket in admin_websockets:
+            admin_websockets.remove(websocket)
+
+
+async def broadcast_to_citizens_binary(data: bytes):
+    if not citizen_websockets:
+        return
+    dead_ws = set()
+    for ws in citizen_websockets:
+        try:
+            await ws.send_bytes(data)
+        except:
+            dead_ws.add(ws)
+    for ws in dead_ws:
+        citizen_websockets.remove(ws)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for Gemini Live."""
     await websocket.accept()
+    citizen_websockets.add(websocket)
 
     logger.info("WebSocket connection accepted")
 
@@ -65,8 +145,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_bytes(data)
 
     async def audio_interrupt_callback():
-        # The event queue handles the JSON message, but we might want to do something else here
-        pass
+        await broadcast_to_admins({"type": "interrupted", "source": "system"})
 
     gemini_client = GeminiLive(
         api_key=GEMINI_API_KEY, model=MODEL, input_sample_rate=16000
@@ -81,10 +160,13 @@ async def websocket_endpoint(websocket: WebSocket):
                     await audio_input_queue.put(message["bytes"])
                 elif message.get("text"):
                     text = message["text"]
+                    await broadcast_to_admins({"type": "user_input", "text": text})
                     try:
                         payload = json.loads(text)
                         if isinstance(payload, dict) and payload.get("type") == "image":
-                            logger.info(f"Received image chunk from client: {len(payload['data'])} base64 chars")
+                            logger.info(
+                                f"Received image chunk from client: {len(payload['data'])} base64 chars"
+                            )
                             image_data = base64.b64decode(payload["data"])
                             await video_input_queue.put(image_data)
                             continue
@@ -96,6 +178,9 @@ async def websocket_endpoint(websocket: WebSocket):
             logger.info("WebSocket disconnected")
         except Exception as e:
             logger.error(f"Error receiving from client: {e}")
+        finally:
+            if websocket in citizen_websockets:
+                citizen_websockets.remove(websocket)
 
     receive_task = asyncio.create_task(receive_from_client())
 
@@ -110,6 +195,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if event:
                 # Forward events (transcriptions, etc) to client
                 await websocket.send_json(event)
+                # Also broadcast to admins
+                await broadcast_to_admins(event)
 
     try:
         await run_session()

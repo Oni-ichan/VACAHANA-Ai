@@ -6,18 +6,14 @@ const appSection = document.getElementById("app-section");
 const sessionEndSection = document.getElementById("session-end-section");
 const restartBtn = document.getElementById("restartBtn");
 const micBtn = document.getElementById("micBtn");
-const cameraBtn = document.getElementById("cameraBtn");
-const screenBtn = document.getElementById("screenBtn");
+const locationBtn = document.getElementById("locationBtn");
 const disconnectBtn = document.getElementById("disconnectBtn");
-const textInput = document.getElementById("textInput");
-const sendBtn = document.getElementById("sendBtn");
-const videoPreview = document.getElementById("video-preview");
-const videoPlaceholder = document.getElementById("video-placeholder");
 const connectBtn = document.getElementById("connectBtn");
 const chatLog = document.getElementById("chat-log");
 
 let currentGeminiMessageDiv = null;
 let currentUserMessageDiv = null;
+let isAiOverridden = false;
 
 const mediaHandler = new MediaHandler();
 const geminiClient = new GeminiClient({
@@ -29,7 +25,7 @@ const geminiClient = new GeminiClient({
 
     // Send hidden instruction
     geminiClient.sendText(
-      `System: Introduce yourself as a demo of the Gemini Live API.
+      `System: Introduce yourself as Vachana AI.
        Suggest playing with features like the native audio for accents and multilingual support.
        Keep the intro concise and friendly.`
     );
@@ -43,6 +39,7 @@ const geminiClient = new GeminiClient({
         console.error("Parse error:", e);
       }
     } else {
+      // Could be AI audio OR Admin audio
       mediaHandler.playAudio(event.data);
     }
   },
@@ -64,6 +61,13 @@ function handleJsonMessage(msg) {
     mediaHandler.stopAudioPlayback();
     currentGeminiMessageDiv = null;
     currentUserMessageDiv = null;
+    if (msg.source === "admin") {
+      isAiOverridden = true;
+      appendMessage("system", "OPERATOR HAS TAKEN CONTROL");
+    }
+  } else if (msg.type === "released") {
+    isAiOverridden = false;
+    appendMessage("system", "OPERATOR HAS RELEASED CONTROL TO AI");
   } else if (msg.type === "turn_complete") {
     currentGeminiMessageDiv = null;
     currentUserMessageDiv = null;
@@ -79,15 +83,16 @@ function handleJsonMessage(msg) {
       currentGeminiMessageDiv.textContent += msg.text;
       chatLog.scrollTop = chatLog.scrollHeight;
     } else {
-      currentGeminiMessageDiv = appendMessage("gemini", msg.text);
+      currentGeminiMessageDiv = appendMessage("vachana", msg.text);
     }
   }
 }
 
 function appendMessage(type, text) {
   const msgDiv = document.createElement("div");
+  const label = type === "vachana" ? "Vachana" : type === "user" ? "You" : type;
   msgDiv.className = `message ${type}`;
-  msgDiv.textContent = text;
+  msgDiv.textContent = `${label}: ${text}`;
   chatLog.appendChild(msgDiv);
   chatLog.scrollTop = chatLog.scrollHeight;
   return msgDiv;
@@ -116,6 +121,35 @@ disconnectBtn.onclick = () => {
   geminiClient.disconnect();
 };
 
+locationBtn.onclick = () => {
+  if (navigator.geolocation) {
+    locationBtn.textContent = "Locating...";
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (geminiClient.isConnected()) {
+          geminiClient.sendText(
+            JSON.stringify({
+              type: "location",
+              lat: latitude,
+              lon: longitude,
+            })
+          );
+          appendMessage("system", "LOCATION SHARED: GPS Coordinates sent.");
+          locationBtn.textContent = "Location Shared";
+          locationBtn.disabled = true;
+        }
+      },
+      (error) => {
+        alert("Error getting location: " + error.message);
+        locationBtn.textContent = "Share Location";
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by this browser.");
+  }
+};
+
 micBtn.onclick = async () => {
   if (mediaHandler.isRecording) {
     mediaHandler.stopAudio();
@@ -123,7 +157,7 @@ micBtn.onclick = async () => {
   } else {
     try {
       await mediaHandler.startAudio((data) => {
-        if (geminiClient.isConnected()) {
+        if (geminiClient.isConnected() && !isAiOverridden) {
           geminiClient.send(data);
         }
       });
@@ -134,96 +168,16 @@ micBtn.onclick = async () => {
   }
 };
 
-cameraBtn.onclick = async () => {
-  if (cameraBtn.textContent === "Stop Camera") {
-    mediaHandler.stopVideo(videoPreview);
-    cameraBtn.textContent = "Start Camera";
-    screenBtn.textContent = "Share Screen";
-    videoPlaceholder.classList.remove("hidden");
-  } else {
-    // If another stream is active (e.g. Screen), stop it first
-    if (mediaHandler.videoStream) {
-      mediaHandler.stopVideo(videoPreview);
-      screenBtn.textContent = "Share Screen";
-    }
-
-    try {
-      await mediaHandler.startVideo(videoPreview, (base64Data) => {
-        if (geminiClient.isConnected()) {
-          geminiClient.sendImage(base64Data);
-        }
-      });
-      cameraBtn.textContent = "Stop Camera";
-      screenBtn.textContent = "Share Screen";
-      videoPlaceholder.classList.add("hidden");
-    } catch (e) {
-      alert("Could not access camera");
-    }
-  }
-};
-
-screenBtn.onclick = async () => {
-  if (screenBtn.textContent === "Stop Sharing") {
-    mediaHandler.stopVideo(videoPreview);
-    screenBtn.textContent = "Share Screen";
-    cameraBtn.textContent = "Start Camera";
-    videoPlaceholder.classList.remove("hidden");
-  } else {
-    // If another stream is active (e.g. Camera), stop it first
-    if (mediaHandler.videoStream) {
-      mediaHandler.stopVideo(videoPreview);
-      cameraBtn.textContent = "Start Camera";
-    }
-
-    try {
-      await mediaHandler.startScreen(
-        videoPreview,
-        (base64Data) => {
-          if (geminiClient.isConnected()) {
-            geminiClient.sendImage(base64Data);
-          }
-        },
-        () => {
-          // onEnded callback (e.g. user stopped sharing from browser)
-          screenBtn.textContent = "Share Screen";
-          videoPlaceholder.classList.remove("hidden");
-        }
-      );
-      screenBtn.textContent = "Stop Sharing";
-      cameraBtn.textContent = "Start Camera";
-      videoPlaceholder.classList.add("hidden");
-    } catch (e) {
-      alert("Could not share screen");
-    }
-  }
-};
-
-sendBtn.onclick = sendText;
-textInput.onkeypress = (e) => {
-  if (e.key === "Enter") sendText();
-};
-
-function sendText() {
-  const text = textInput.value;
-  if (text && geminiClient.isConnected()) {
-    geminiClient.sendText(text);
-    appendMessage("user", text);
-    textInput.value = "";
-  }
-}
-
 function resetUI() {
   authSection.classList.remove("hidden");
   appSection.classList.add("hidden");
   sessionEndSection.classList.add("hidden");
 
   mediaHandler.stopAudio();
-  mediaHandler.stopVideo(videoPreview);
-  videoPlaceholder.classList.remove("hidden");
 
   micBtn.textContent = "Start Mic";
-  cameraBtn.textContent = "Start Camera";
-  screenBtn.textContent = "Share Screen";
+  locationBtn.textContent = "Share Location";
+  locationBtn.disabled = false;
   chatLog.innerHTML = "";
   connectBtn.disabled = false;
 }
@@ -232,7 +186,6 @@ function showSessionEnd() {
   appSection.classList.add("hidden");
   sessionEndSection.classList.remove("hidden");
   mediaHandler.stopAudio();
-  mediaHandler.stopVideo(videoPreview);
 }
 
 restartBtn.onclick = () => {
